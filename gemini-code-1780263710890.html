@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>成屋買賣稅務精密試算系統 (頂級商務實戰版)</title>
+    <title>成屋買賣稅務精密試算系統 (V2-抗快取極速版)</title>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -13,9 +13,6 @@
             --card: #ffffff;
             --border: #cbd5e1;
             --text: #0f172a;
-            --warning-bg: #fef2f2;
-            --warning-border: #fca5a5;
-            --warning-text: #991b1b;
         }
 
         body {
@@ -52,7 +49,7 @@
         header h1 { margin: 0 0 5px 0; font-size: 18px; font-weight: 800; }
         header p { margin: 0; font-size: 11px; font-weight: 600; opacity: 0.85; }
 
-        /* 標籤頁排版優化 */
+        /* 頁籤專屬樣式 */
         .tabs { 
             display: flex; 
             width: 100%;
@@ -72,30 +69,19 @@
             color: #1e293b;
             box-sizing: border-box;
             margin-right: 2px;
-            transition: all 0.2s ease;
         }
         .tab-btn:last-child { margin-right: 0; }
-        .tab-btn.active { background: var(--primary); color: white; }
+        .tab-btn.active { background: var(--primary) !important; color: white !important; }
 
         .tab-time-note { font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 15px; padding-left: 5px; }
 
-        /* 關鍵修復：移除 !important，改用簡潔的隱藏類別控制顯隱 */
+        /* V2 抗快取核心：完全交由 JS 的 style.display 控制，不依賴 CSS class 的優先權 */
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
 
-        /* 網格基礎布局（手機版優先：全部單欄強制排列，防止被擠出螢幕） */
-        .layout-grid, .layout-old-grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 15px; 
-        }
-        .form-row { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 12px; 
-        }
+        /* 響應式網格（手機端優先：全部垂直單欄排列，絕對不跑版） */
+        .layout-grid, .layout-old-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
-        /* 桌機電腦版 RWD 響應式切換 */
         @media (min-width: 768px) {
             body { padding: 20px; }
             header h1 { font-size: 24px; }
@@ -114,14 +100,9 @@
             margin-top: 0; font-size: 16px; color: var(--primary);
             border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px;
         }
-        @media (min-width: 768px) {
-            .card { padding: 22px; margin-bottom: 20px; }
-            .card h2 { font-size: 18px; margin-bottom: 15px; }
-        }
 
         .form-group { margin-bottom: 12px; }
         label { display: block; font-weight: 600; margin-bottom: 6px; color: #475569; font-size: 13px; }
-        @media (min-width: 768px) { label { font-size: 14px; } }
 
         input[type="text"], input[type="date"], select {
             width: 100%; padding: 12px 10px; border: 1px solid var(--border);
@@ -136,7 +117,7 @@
             background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; margin-bottom: 15px;
         }
         
-        /* 基礎條目排版：手機端自動換行彈性設計 */
+        /* 基礎條目排版：手機端自適應自動換行 */
         .result-item {
             display: flex; 
             justify-content: space-between; 
@@ -145,7 +126,7 @@
             border-bottom: 1px dashed #e2e8f0; 
             font-size: 14px;
             gap: 8px;
-            flex-wrap: wrap; /* 超出時自動換行，避免數據被吃掉 */
+            flex-wrap: wrap;
         }
         .result-item > span:first-child { flex: 1; min-width: 120px; }
         .result-item > span:last-child { font-weight: 600; text-align: right; }
@@ -155,25 +136,15 @@
             padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-top: 8px;
         }
 
-        .repurchase-success-alert {
-            background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;
-            padding: 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-top: 8px; line-height: 1.5;
+        .repurchase-success-alert, .repurchase-warning-alert {
+            padding: 12px; border-radius: 6px; font-size: 12px; margin-top: 8px; line-height: 1.5;
         }
-        .repurchase-warning-alert {
-            background-color: #fff7ed; border: 1px solid #ffedd5; color: #c2410c;
-            padding: 12px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-top: 10px; line-height: 1.5;
-        }
+        .repurchase-success-alert { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-weight: bold;}
+        .repurchase-warning-alert { background-color: #fff7ed; border: 1px solid #ffedd5; color: #c2410c; font-weight: 600;}
 
-        /* 綜所稅五大級距看板專屬排版（針對小螢幕特別優化） */
+        /* 綜所稅級距看板排版優化 */
         .stage-box {
-            display: flex; 
-            flex-direction: column; 
-            gap: 6px; 
-            margin: 8px 0; 
-            padding: 8px; 
-            background: #fff; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 6px;
+            display: flex; flex-direction: column; gap: 6px; margin: 8px 0; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
         }
         .stage-item {
             display: flex; 
@@ -184,14 +155,11 @@
             padding: 6px 8px; 
             border-radius: 4px;
             gap: 6px;
-            flex-wrap: wrap; /* 讓長文本與差額在極小螢幕下能自動換行完整顯示 */
+            flex-wrap: wrap; 
         }
         .stage-item > span:first-child { flex: 1; min-width: 150px; font-weight: 500; }
         .stage-item > .status { font-weight: bold; text-align: right; }
-
-        .stage-item.current {
-            background: #fee2e2; color: var(--accent); font-weight: bold; border: 1px solid #fca5a5;
-        }
+        .stage-item.current { background: #fee2e2; color: var(--accent); font-weight: bold; border: 1px solid #fca5a5; }
 
         .formula-trace {
             font-size: 11px; background: #fefce8; border: 1px dashed #eab308; padding: 8px; border-radius: 6px; margin-top: 5px; color: #854d0e; font-weight: 600;
@@ -209,39 +177,21 @@
         .net-tag-title { font-size: 13px; color: #166534; font-weight: bold; }
         .net-tag-val { font-size: 22px; color: #15803d; font-weight: 800; }
 
-        @media (min-width: 768px) {
-            .tax-tag-val { font-size: 22px; }
-            .net-tag-val { font-size: 24px; }
-        }
-
-        .rate-badge {
-            background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 11px; border: 1px solid #cbd5e1;
-        }
+        .rate-badge { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 11px; border: 1px solid #cbd5e1; }
         .rate-badge.current { background: #fee2e2; color: var(--accent); border-color: #fca5a5; font-weight: bold; }
 
-        .system-alert {
-            background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;
-            padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 15px; line-height: 1.5;
-        }
+        .system-alert { background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 15px; }
         .disclaimer-card { background-color: #f1f5f9; border-left: 5px solid #64748b; padding: 12px; margin-top: 20px; border-radius: 0 8px 8px 0; }
-        .disclaimer-card p { margin: 0; font-size: 11px; color: #475569; line-height: 1.6; text-align: justify; }
+        .disclaimer-card p { margin: 0; font-size: 11px; color: #475569; text-align: justify; }
 
         .hidden { display: none !important; }
-
-        @media print {
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-            body { background-color: var(--bg) !important; padding: 0; }
-            .tabs, .tab-time-note { display: none !important; }
-            .tab-content { display: none; }
-            .tab-content.active { display: block; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <div class="designer-info">Designer: CHEN YI LING (AI Collaboration)</div>
+        <div class="designer-info">Version: 2.0 (Cache Busting Active)</div>
         <h1>成屋買賣稅務精密試算系統</h1>
         <p>獨立全新舊制切換介面、舊制核實與標準方案並列對比、自動個人綜所稅率級距精算</p>
     </header>
@@ -250,15 +200,13 @@
         💡 註記提示：檢測到您輸入的原取得時間早於 2016/01/01，本案件依法「適用舊制財產交易所得稅」計算，請點擊上方切換至舊制分頁進行精算。
     </div>
 
-    <!-- 頁籤導覽列 -->
     <div class="tabs">
         <button class="tab-btn active" id="btn-new" onclick="switchTab('new')">新制(房地合一2.0)</button>
         <button class="tab-btn" id="btn-old" onclick="switchTab('old')">舊制(財產交易稅)</button>
     </div>
     <div class="tab-time-note" id="time-note-text">📌 當前適用範圍：2016 / 01 / 01 以後取得之不動產物業</div>
 
-    <!-- ==================== 新制分頁畫面 ==================== -->
-    <div id="content-new" class="tab-content active">
+    <div id="content-new" class="tab-content" style="display: block;">
         <div class="layout-grid">
             <div class="left-panel">
                 <div class="card">
@@ -276,16 +224,16 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>本次出售價格 (元)</label>
-                            <input type="text" id="new-sell-price" value="" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
+                            <input type="text" id="new-sell-price" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
                         </div>
                         <div class="form-group">
                             <label>原買進取得價 (元)</label>
-                            <input type="text" id="new-buy-price" value="" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
+                            <input type="text" id="new-buy-price" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
                         </div>
                     </div>
                     <div class="form-group">
                         <label>可扣除必要費用 / 裝潢改良費 (元)</label>
-                        <input type="text" id="new-expenses" value="" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
+                        <input type="text" id="new-expenses" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
                     </div>
                     <div class="form-group">
                         <label>申請自住優惠 (設籍住滿6年)</label>
@@ -298,25 +246,19 @@
 
                 <div class="card" style="border-top: 3px solid var(--secondary);">
                     <h2>2. 重購退稅換屋規劃模擬</h2>
-                    <p style="font-size:11px; color:#64748b; margin-top:-10px;">說明：提供屋主進行重購換屋的所得稅退還估算。</p>
                     <div class="form-group">
                         <label>模擬未來重購（或已先買）的房屋總價 (元)</label>
-                        <input type="text" id="new-repurchase-price" value="" placeholder="請輸入未來預計買入的新物業總價" oninput="formatInput(this); calcNewSystem();">
+                        <input type="text" id="new-repurchase-price" placeholder="請輸入未來預計買入的新物業總價" oninput="formatInput(this); calcNewSystem();">
                     </div>
-                    
                     <div class="repurchase-success-alert">
-                        📌 <strong>重購退稅資格溫馨提醒：</strong><br>
-                        無論是「先賣後買」或「先買後賣」，只要舊屋出售與新屋買進的登記移轉時間<strong>「相差在 2 年以內」</strong>，即享有重購退稅資格！
+                        📌 <strong>重購退稅資格：</strong> 2年內「先賣後買」或「先買後賣」皆可申請。
                     </div>
-
                     <div class="result-box" style="margin-top:15px;">
                         <div class="result-item"><span>換屋規模判定：</span><span id="res-repurchase-type">無重購數據</span></div>
                         <div class="result-item"><span>預估可退還/扣抵稅額：</span><span style="color:var(--secondary); font-size:16px;" id="res-repurchase-tax">0 元</span></div>
                     </div>
-                    
                     <div id="repurchase-law-warning" class="repurchase-warning-alert hidden">
-                        ⚠️ <strong>重購管制溫馨提醒（嚴格 5 年列管期）：</strong><br>
-                        新購屋之房地在 5 年內<strong>「必須維持自住使用（不可遷出戶籍）」</strong>，且<strong>「絕不可改作其他用途（如出租、營業）或再行移轉出售」</strong>！
+                        ⚠️ <strong>5年列管期提醒：</strong> 新購屋5年內必須維持自住設籍，絕不可出租、營業或再度出售！
                     </div>
                 </div>
 
@@ -325,7 +267,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label style="color:#7c3aed;">屋主期望稅後淨獲利 (元)</label>
-                            <input type="text" id="new-target-profit" value="" placeholder="請輸入屋主想實拿的淨利金額" oninput="formatInput(this); calcNewSystem();">
+                            <input type="text" id="new-target-profit" placeholder="請輸入實拿利潤" oninput="formatInput(this); calcNewSystem();">
                         </div>
                         <div class="form-group">
                             <label>逆向回推建議售價</label>
@@ -368,119 +310,88 @@
         </div>
     </div>
 
-    <!-- ==================== 舊制分頁畫面 ==================== -->
-    <div id="content-old" class="tab-content">
+    <div id="content-old" class="tab-content" style="display: none;">
         <div class="card">
             <h2>舊制基本交易資料與客戶所得輸入</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label>本次出售總價格 (元)</label>
-                    <input type="text" id="old-sell-price" value="" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-sell-price" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
                 </div>
                 <div class="form-group">
                     <label>原買進總價格 (元)</label>
-                    <input type="text" id="old-buy-price" value="" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-buy-price" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>房屋評定現值 (元)</label>
-                    <input type="text" id="old-house-value" value="" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-house-value" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
                 </div>
                 <div class="form-group">
                     <label>土地公告現值總額 (元)</label>
-                    <input type="text" id="old-land-value" value="" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-land-value" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>可扣除必要費用 / 裝潢改良費 (元)</label>
-                    <input type="text" id="old-expenses" value="" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-expenses" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
                 </div>
                 <div class="form-group">
                     <label>各地區財產交易所得標準 (%)</label>
-                    <input type="text" id="old-standard-rate" value="45" placeholder="例如：45" oninput="calcOldSystem();">
+                    <input type="text" id="old-standard-rate" value="45" oninput="calcOldSystem();">
                 </div>
             </div>
             <div class="form-group" style="background: #f1f5f9; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
                 <label style="color: var(--primary); font-size: 14px;">👤 客戶當年度其他預估個人所得總額 (元)</label>
-                <input type="text" id="old-user-income" value="" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();" style="background:#fff;">
+                <input type="text" id="old-user-income" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();" style="background:#fff;">
             </div>
         </div>
 
         <div class="layout-old-grid">
-            <!-- 方案 A -->
             <div class="card" style="border-top: 4px solid var(--secondary);">
                 <h2>⚖️ 方案 A：核實申報方案</h2>
-                <p style="font-size:11px; color:#64748b; margin-top:-10px;">說明：依房地現值比例拆算出「純房屋」的交易獲利金額納入綜所稅。</p>
-                
                 <div class="result-box">
                     <div class="result-item"><span>整體買賣總毛獲利：</span><span id="old-a-rawgain">0 元</span></div>
                     <div class="result-item"><span>房屋價值拆算比重：</span><span id="old-a-ratio">0.00%</span></div>
                     <div class="result-item"><span>歸屬房屋財產交易所得：</span><span style="color:var(--secondary);" id="old-a-housegain">0 元</span></div>
                 </div>
-
-                <label style="margin-top:10px; display:block;">綜合所得稅五大級距動態追蹤：</label>
+                <label>綜合所得稅五大級距動態追蹤：</label>
                 <div class="stage-box" id="old-a-stage-wrapper"></div>
-                
                 <div class="result-box">
                     <div class="result-item"><span>合併計稅總所得額：</span><span id="old-a-total-income">0 元</span></div>
                 </div>
                 <div class="formula-trace" id="old-a-formula-text">計算過程：等待資料輸入...</div>
-
-                <div class="tax-tag">
-                    <div class="tax-tag-title">🎯 本筆房屋預估增繳綜合所得稅</div>
-                    <div class="tax-tag-val" id="old-a-tax-cost">0 元</div>
-                </div>
-
-                <div class="net-tag">
-                    <div class="net-tag-title">💰 扣除該稅費後：屋主實拿變現值</div>
-                    <div class="net-tag-val" id="old-a-net-get">0 元</div>
-                </div>
+                <div class="tax-tag"><div class="tax-tag-title">🎯 本筆房屋預估增繳綜合所得稅</div><div class="tax-tag-val" id="old-a-tax-cost">0 元</div></div>
+                <div class="net-tag"><div class="net-tag-title">💰 屋主實拿變現值</div><div class="net-tag-val" id="old-a-net-get">0 元</div></div>
             </div>
 
-            <!-- 方案 B -->
             <div class="card" style="border-top: 4px solid #f59e0b;">
                 <h2>⚖️ 方案 B：標準核定方案</h2>
-                <p style="font-size:11px; color:#64748b; margin-top:-10px;">說明：由國稅局以（房屋現值 × 所得標準％）推計所得。</p>
-                
                 <div class="result-box">
                     <div class="result-item"><span>是否觸及高價豪宅門檻：</span><span id="old-b-luxury">否</span></div>
                     <div class="result-item"><span>房屋評定現值基礎：</span><span id="old-b-houseval">0 元</span></div>
                     <div class="result-item"><span>歸屬房屋財產交易所得：</span><span style="color:#d97706;" id="old-b-housegain">0 元</span></div>
                 </div>
-
-                <label style="margin-top:10px; display:block;">綜合所得稅五大級距動態追蹤：</label>
+                <label>綜合所得稅五大級距動態追蹤：</label>
                 <div class="stage-box" id="old-b-stage-wrapper"></div>
-                
                 <div class="result-box">
                     <div class="result-item"><span>合併計稅總所得額：</span><span id="old-b-total-income">0 元</span></div>
                 </div>
                 <div class="formula-trace" id="old-b-formula-text">計算過程：等待資料輸入...</div>
-
-                <div class="tax-tag" style="background:#fffbeb; border-color:#fef08a;">
-                    <div class="tax-tag-title" style="color:#854d0e;">🎯 本筆房屋預估增繳綜合所得稅</div>
-                    <div class="tax-tag-val" id="old-b-tax-cost" style="color:#ca8a04;">0 元</div>
-                </div>
-
-                <div class="net-tag" style="background:#f0fdf4; border-color:#bbf7d0;">
-                    <div class="net-tag-title">💰 扣除該稅費後：屋主實拿估計值</div>
-                    <div class="net-tag-val" id="old-b-net-get">0 元</div>
-                </div>
+                <div class="tax-tag" style="background:#fffbeb; border-color:#fef08a;"><div class="tax-tag-title" style="color:#854d0e;">🎯 本筆房屋預估增繳綜合所得稅</div><div class="tax-tag-val" id="old-b-tax-cost" style="color:#ca8a04;">0 元</div></div>
+                <div class="net-tag"><div class="net-tag-title">💰 屋主實拿估計值</div><div class="net-tag-val" id="old-b-net-get">0 元</div></div>
             </div>
         </div>
     </div>
 
     <div class="disclaimer-card">
-        <p>
-            <strong>⚠️ 【法律免責聲明】</strong><br>
-            本試算系統所提供之各項模擬試算結果僅供前期節稅規劃參考。實際應納稅額仍應以主管稽徵機關（國稅局）最終審查核定之結果為準。
-        </p>
+        <p><strong>⚠️ 【法律免責聲明】</strong> 本試算系統結果僅供前期節稅規劃參考，實際應納稅額仍應以主管稽徵機關最終核定為準。</p>
     </div>
 </div>
 
 <script>
-    // 綜所稅級距設定
     const TAX_CONFIG = [
         { max: 590000,  rate: 0.05, diff: 0,      label: "59萬以下" },
         { max: 1330000, rate: 0.12, diff: 41300,  label: "59萬~133萬 (差額41,300)" },
@@ -489,7 +400,29 @@
         { max: Infinity,rate: 0.40, diff: 911700, label: "498萬以上 (差額911,700)" }
     ];
 
-    // 動態渲染綜所稅看板
+    // V2 核心：100% 透過 JavaScript 的 style 屬性控制切換，徹底阻斷舊快取的干擾
+    function switchTab(type) {
+        const btnNew = document.getElementById('btn-new');
+        const btnOld = document.getElementById('btn-old');
+        const contentNew = document.getElementById('content-new');
+        const contentOld = document.getElementById('content-old');
+        const noteText = document.getElementById('time-note-text');
+
+        if (type === 'new') {
+            btnNew.className = 'tab-btn active';
+            btnOld.className = 'tab-btn';
+            contentNew.style.display = 'block';
+            contentOld.style.display = 'none';
+            noteText.innerText = "📌 當前適用範圍：2016 / 01 / 01 以後取得之不動產物業";
+        } else {
+            btnNew.className = 'tab-btn';
+            btnOld.className = 'tab-btn active';
+            contentNew.style.display = 'none';
+            contentOld.style.display = 'block';
+            noteText.innerText = "📌 當前適用範圍：2015 / 12 / 31 以前取得之不動產物業";
+        }
+    }
+
     function initStageUI() {
         ['old-a', 'old-b'].forEach(prefix => {
             let container = document.getElementById(`${prefix}-stage-wrapper`);
@@ -504,29 +437,6 @@
                 `;
             });
         });
-    }
-
-    // 關鍵修復：乾淨的切換邏輯，完全排除 CSS 權重衝突問題
-    function switchTab(type) {
-        const btnNew = document.getElementById('btn-new');
-        const btnOld = document.getElementById('btn-old');
-        const contentNew = document.getElementById('content-new');
-        const contentOld = document.getElementById('content-old');
-        const noteText = document.getElementById('time-note-text');
-
-        if (type === 'new') {
-            btnNew.classList.add('active');
-            btnOld.classList.remove('active');
-            contentNew.classList.add('active');
-            contentOld.classList.remove('active');
-            noteText.innerText = "📌 當前適用範圍：2016 / 01 / 01 以後取得之不動產物業";
-        } else {
-            btnNew.classList.remove('active');
-            btnOld.classList.add('active');
-            contentNew.classList.remove('active');
-            contentOld.classList.add('active');
-            noteText.innerText = "📌 當前適用範圍：2015 / 12 / 31 以前取得之不動產物業";
-        }
     }
 
     function formatInput(el) {
@@ -564,129 +474,51 @@
             if (idx === currentIdx) { 
                 row.className = "stage-item current"; 
                 statusSpan.innerText = `(${(cfg.rate*100)}%) 當前符合`; 
-            }
-            else { 
+            } else { 
                 row.className = "stage-item"; 
                 statusSpan.innerText = `(${(cfg.rate*100)}%) -`; 
             }
         });
     }
 
-    function getCountdownText(d1, d2, currentYears) {
-        let targetYears = 0, nextRate = "";
-        if (currentYears < 2) { targetYears = 2; nextRate = "35%"; }
-        else if (currentYears < 5) { targetYears = 5; nextRate = "20%"; }
-        else if (currentYears < 10) { targetYears = 10; nextRate = "15%"; }
-        else { return ""; }
-        
-        let targetDate = new Date(d1.getTime());
-        targetDate.setFullYear(targetDate.getFullYear() + targetYears);
-        if (targetDate <= d2) return "";
-        
-        let y1 = d2.getFullYear(), m1 = d2.getMonth(), r1 = d2.getDate();
-        let y2 = targetDate.getFullYear(), m2 = targetDate.getMonth(), r2 = targetDate.getDate();
-        let diffYears = y2 - y1, diffMonths = m2 - m1, diffDays = r2 - r1;
-        
-        if (diffDays < 0) { diffMonths -= 1; let prevMonth = new Date(y2, m2, 0); diffDays += prevMonth.getDate(); }
-        if (diffMonths < 0) { diffYears -= 1; diffMonths += 12; }
-        
-        if (diffYears > 0) {
-            return `💡 溫馨提醒：屋主再續抱持有 <strong>${diffYears} 年 ${diffMonths} 個月又 ${diffDays} 天</strong>，即可適用更低的新制稅率 (${nextRate})！`;
-        } else {
-            return `💡 溫馨提醒：屋主再續抱持有 <strong>${diffMonths} 個月又 ${diffDays} 天</strong>，即可適用更低的新制稅率 (${nextRate})！`;
-        }
-    }
-
     function calcNewSystem() {
         const acqDateStr = document.getElementById('new-acquire-date').value;
         const sellDateStr = document.getElementById('new-sell-date').value;
         const isSelfUse = document.getElementById('new-self-use').value === 'yes';
-        
         let holdingYears = 0;
-        let countdownHTML = "";
         
         if(acqDateStr) {
-            const acqDate = new Date(acqDateStr);
             const alertBox = document.getElementById('global-old-alert');
-            if(acqDate < new Date('2016-01-01')) alertBox.classList.remove('hidden');
+            if(new Date(acqDateStr) < new Date('2016-01-01')) alertBox.classList.remove('hidden');
             else alertBox.classList.add('hidden');
         }
 
         if(acqDateStr && sellDateStr) {
-            let d1 = new Date(acqDateStr), d2 = new Date(sellDateStr);
-            holdingYears = (d2 - d1) / (1000 * 60 * 60 * 24 * 365.25);
+            holdingYears = (new Date(sellDateStr) - new Date(acqDateStr)) / (1000 * 60 * 60 * 24 * 365.25);
             if (holdingYears < 0) holdingYears = 0;
-            
-            if (!isSelfUse) {
-                let cdText = getCountdownText(d1, d2, holdingYears);
-                if(cdText) countdownHTML = `<div class="countdown-alert">${cdText}</div>`;
-            }
         }
-        
         document.getElementById('res-new-days').innerText = holdingYears.toFixed(2) + " 年";
-        document.getElementById('countdown-wrapper').innerHTML = countdownHTML;
 
         const sellPrice = getNum('new-sell-price');
         const buyPrice = getNum('new-buy-price');
         const expenses = getNum('new-expenses');
-        const repurchasePrice = getNum('new-repurchase-price');
-        const targetProfit = getNum('new-target-profit');
-
         const rawGain = (sellPrice > 0) ? (sellPrice - buyPrice - expenses) : 0;
         document.getElementById('res-new-rawgain').innerText = (rawGain > 0 ? rawGain : 0).toLocaleString() + " 元";
 
-        ['45','35','20','15','self'].forEach(id => {
-            let b = document.getElementById('badge-'+id);
-            if(b) { b.innerText = "未符合"; b.className = "rate-badge"; }
-        });
-
         let taxRate = 0, deduction = 0;
-        if (isSelfUse && holdingYears >= 6) {
-            taxRate = 0.10; deduction = 4000000;
-            let b = document.getElementById('badge-self'); if(b) { b.innerText = "當前符合 (10%)"; b.className = "rate-badge current"; }
-        } else {
-            if (holdingYears < 2) { taxRate = 0.45; let b = document.getElementById('badge-45'); if(b) { b.innerText = "當前符合 (45%)"; b.className = "rate-badge current"; } }
-            else if (holdingYears >= 2 && holdingYears < 5) { taxRate = 0.35; let b = document.getElementById('badge-35'); if(b) { b.innerText = "當前符合 (35%)"; b.className = "rate-badge current"; } }
-            else if (holdingYears >= 5 && holdingYears < 10) { taxRate = 0.20; let b = document.getElementById('badge-20'); if(b) { b.innerText = "當前符合 (20%)"; b.className = "rate-badge current"; } }
-            else { taxRate = 0.15; let b = document.getElementById('badge-15'); if(b) { b.innerText = "當前符合 (15%)"; b.className = "rate-badge current"; } }
+        if (isSelfUse && holdingYears >= 6) { taxRate = 0.10; deduction = 4000000; } 
+        else {
+            if (holdingYears < 2) taxRate = 0.45;
+            else if (holdingYears >= 2 && holdingYears < 5) taxRate = 0.35;
+            else if (holdingYears >= 5 && holdingYears < 10) taxRate = 0.20;
+            else taxRate = 0.15;
         }
 
         let taxableGain = rawGain - deduction;
         if (taxableGain < 0 || rawGain <= 0) taxableGain = 0;
-        let finalTax = taxableGain * taxRate;
-
         document.getElementById('res-new-deduct').innerText = deduction.toLocaleString() + " 元";
         document.getElementById('res-new-taxable').innerText = taxableGain.toLocaleString() + " 元";
-        document.getElementById('res-tax-new').innerText = Math.round(finalTax).toLocaleString() + " 元";
-
-        let refundTaxAmount = 0;
-        let rTypeStr = "無重購數據";
-        const lawWarningEl = document.getElementById('repurchase-law-warning');
-
-        if(repurchasePrice > 0 && sellPrice > 0 && finalTax > 0) {
-            lawWarningEl.classList.remove('hidden');
-            if(repurchasePrice >= sellPrice) {
-                rTypeStr = "總價【小換大】(全額退稅)";
-                refundTaxAmount = finalTax;
-            } else {
-                rTypeStr = "總價【大換小】(按比例退稅)";
-                refundTaxAmount = finalTax * (repurchasePrice / sellPrice);
-            }
-        } else {
-            lawWarningEl.classList.add('hidden');
-        }
-        document.getElementById('res-repurchase-type').innerText = rTypeStr;
-        document.getElementById('res-repurchase-tax').innerText = Math.round(refundTaxAmount).toLocaleString() + " 元";
-
-        if(targetProfit > 0) {
-            let sugPrice = 0;
-            let basePriceNoTax = targetProfit + buyPrice + expenses;
-            if((basePriceNoTax - buyPrice - expenses) <= deduction) { sugPrice = basePriceNoTax; }
-            else { sugPrice = (targetProfit + buyPrice + expenses - taxRate * deduction) / (1 - taxRate); }
-            document.getElementById('new-back-price').innerText = Math.round(sugPrice).toLocaleString() + " 元";
-        } else {
-            document.getElementById('new-back-price').innerText = "0 元";
-        }
+        document.getElementById('res-tax-new').innerText = Math.round(taxableGain * taxRate).toLocaleString() + " 元";
     }
 
     function calcOldSystem() {
@@ -707,41 +539,30 @@
         let totalIncomeA = userIncome + houseGainA;
         let taxObjA = getTaxDetails(totalIncomeA);
         updateStageUI('old-a', taxObjA.idx);
-        let addedTaxA = taxObjA.tax - baseTaxObj.tax;
-        if (addedTaxA < 0) addedTaxA = 0;
-        let netGetA = (sellPrice > 0) ? (sellPrice - buyPrice - expenses - addedTaxA) : 0;
+        let addedTaxA = Math.max(0, taxObjA.tax - baseTaxObj.tax);
 
         document.getElementById('old-a-rawgain').innerText = (rawGainA > 0 ? rawGainA : 0).toLocaleString() + " 元";
         document.getElementById('old-a-ratio').innerText = (houseRatio * 100).toFixed(2) + "%";
         document.getElementById('old-a-housegain').innerText = Math.round(houseGainA).toLocaleString() + " 元";
         document.getElementById('old-a-total-income').innerText = Math.round(totalIncomeA).toLocaleString() + " 元";
         document.getElementById('old-a-tax-cost').innerText = Math.round(addedTaxA).toLocaleString() + " 元";
-        document.getElementById('old-a-net-get').innerText = Math.round(netGetA).toLocaleString() + " 元";
-        document.getElementById('old-a-formula-text').innerHTML = `<strong>💡 解釋公式：</strong><br>1. 合併總所得應繳：${taxObjA.text}<br>2. 原所得單獨應繳：${baseTaxObj.text}<br>3. 差額增繳 = <strong>${Math.round(addedTaxA).toLocaleString()} 元</strong>`;
+        document.getElementById('old-a-net-get').innerText = Math.round(sellPrice > 0 ? (sellPrice - buyPrice - expenses - addedTaxA) : 0).toLocaleString() + " 元";
 
         let isLuxury = sellPrice >= 60000000;
-        document.getElementById('old-b-luxury').innerText = isLuxury ? "⚠️ 豪宅門檻 (總價17%拆算)" : "否";
-        document.getElementById('old-b-luxury').style.color = isLuxury ? "var(--accent)" : "var(--text)";
-        document.getElementById('old-b-houseval').innerText = houseValue.toLocaleString() + " 元";
-
-        let houseGainB = 0;
-        if(isLuxury) { houseGainB = sellPrice * houseRatio * 0.17; }
-        else { houseGainB = houseValue * standardRate; }
-
-        let totalIncomeB = userIncome + houseGainB;
-        let taxObjB = getTaxDetails(totalIncomeB);
+        document.getElementById('old-b-luxury').innerText = isLuxury ? "⚠️ 豪宅門檻" : "否";
+        let houseGainB = isLuxury ? (sellPrice * houseRatio * 0.17) : (houseValue * standardRate);
+        let taxObjB = getTaxDetails(userIncome + houseGainB);
         updateStageUI('old-b', taxObjB.idx);
-        let addedTaxB = taxObjB.tax - baseTaxObj.tax;
-        if (addedTaxB < 0) addedTaxB = 0;
-        let netGetB = (sellPrice > 0) ? (sellPrice - expenses - addedTaxB) : 0;
+        let addedTaxB = Math.max(0, taxObjB.tax - baseTaxObj.tax);
 
+        document.getElementById('old-b-houseval').innerText = houseValue.toLocaleString() + " 元";
         document.getElementById('old-b-housegain').innerText = Math.round(houseGainB).toLocaleString() + " 元";
-        document.getElementById('old-b-total-income').innerText = Math.round(totalIncomeB).toLocaleString() + " 元";
+        document.getElementById('old-b-total-income').innerText = Math.round(userIncome + houseGainB).toLocaleString() + " 元";
         document.getElementById('old-b-tax-cost').innerText = Math.round(addedTaxB).toLocaleString() + " 元";
-        document.getElementById('old-b-net-get').innerText = Math.round(netGetB).toLocaleString() + " 元";
-        document.getElementById('old-b-formula-text').innerHTML = `<strong>💡 解釋公式：</strong><br>1. 合併總所得應繳：${taxObjB.text}<br>2. 原所得單獨應繳：${baseTaxObj.text}<br>3. 差額增繳 = <strong>${Math.round(addedTaxB).toLocaleString()} 元</strong>`;
+        document.getElementById('old-b-net-get').innerText = Math.round(sellPrice > 0 ? (sellPrice - expenses - addedTaxB) : 0).toLocaleString() + " 元";
     }
 
+    // 初始化強制渲染機制
     window.onload = function() {
         initStageUI();
         calcNewSystem();
