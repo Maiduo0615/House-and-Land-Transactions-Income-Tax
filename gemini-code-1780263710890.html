@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>成屋買賣稅務精密試算系統 (V2-抗快取極速版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>成屋買賣稅務精密試算系統 (V3-GitHub特調版)</title>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -49,7 +49,7 @@
         header h1 { margin: 0 0 5px 0; font-size: 18px; font-weight: 800; }
         header p { margin: 0; font-size: 11px; font-weight: 600; opacity: 0.85; }
 
-        /* 頁籤專屬樣式 */
+        /* 導覽頁籤 */
         .tabs { 
             display: flex; 
             width: 100%;
@@ -71,14 +71,16 @@
             margin-right: 2px;
         }
         .tab-btn:last-child { margin-right: 0; }
-        .tab-btn.active { background: var(--primary) !important; color: white !important; }
+        
+        /* 提高優先權，確保高亮樣式不受任何快取干擾 */
+        .tabs .tab-btn.active { background: var(--primary) !important; color: #ffffff !important; }
 
         .tab-time-note { font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 15px; padding-left: 5px; }
 
-        /* V2 抗快取核心：完全交由 JS 的 style.display 控制，不依賴 CSS class 的優先權 */
+        /* 預設隱藏，完全交由 JS 直接操控 DOM style */
         .tab-content { display: none; }
 
-        /* 響應式網格（手機端優先：全部垂直單欄排列，絕對不跑版） */
+        /* RWD 網格布局（手機優先） */
         .layout-grid, .layout-old-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         .form-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
@@ -117,63 +119,29 @@
             background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; margin-bottom: 15px;
         }
         
-        /* 基礎條目排版：手機端自適應自動換行 */
         .result-item {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 8px 0; 
-            border-bottom: 1px dashed #e2e8f0; 
-            font-size: 14px;
-            gap: 8px;
-            flex-wrap: wrap;
+            display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; gap: 8px; flex-wrap: wrap;
         }
         .result-item > span:first-child { flex: 1; min-width: 120px; }
         .result-item > span:last-child { font-weight: 600; text-align: right; }
 
-        .countdown-alert {
-            background-color: #fffbeb; border: 1px solid #fde68a; color: #b45309;
-            padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-top: 8px;
-        }
+        .countdown-alert { background-color: #fffbeb; border: 1px solid #fde68a; color: #b45309; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-top: 8px; }
+        .repurchase-success-alert { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 6px; font-size: 12px; margin-top: 8px; line-height: 1.5; font-weight: bold; }
+        .repurchase-warning-alert { background-color: #fff7ed; border: 1px solid #ffedd5; color: #c2410c; padding: 12px; border-radius: 6px; font-size: 12px; margin-top: 8px; line-height: 1.5; font-weight: 600; }
 
-        .repurchase-success-alert, .repurchase-warning-alert {
-            padding: 12px; border-radius: 6px; font-size: 12px; margin-top: 8px; line-height: 1.5;
-        }
-        .repurchase-success-alert { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-weight: bold;}
-        .repurchase-warning-alert { background-color: #fff7ed; border: 1px solid #ffedd5; color: #c2410c; font-weight: 600;}
-
-        /* 綜所稅級距看板排版優化 */
-        .stage-box {
-            display: flex; flex-direction: column; gap: 6px; margin: 8px 0; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
-        }
-        .stage-item {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            font-size: 13px; 
-            color: #475569; 
-            padding: 6px 8px; 
-            border-radius: 4px;
-            gap: 6px;
-            flex-wrap: wrap; 
-        }
+        .stage-box { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; }
+        .stage-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #475569; padding: 6px 8px; border-radius: 4px; gap: 6px; flex-wrap: wrap; }
         .stage-item > span:first-child { flex: 1; min-width: 150px; font-weight: 500; }
         .stage-item > .status { font-weight: bold; text-align: right; }
         .stage-item.current { background: #fee2e2; color: var(--accent); font-weight: bold; border: 1px solid #fca5a5; }
 
-        .formula-trace {
-            font-size: 11px; background: #fefce8; border: 1px dashed #eab308; padding: 8px; border-radius: 6px; margin-top: 5px; color: #854d0e; font-weight: 600;
-        }
-
-        .tax-tag {
-            background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 12px; text-align: center; margin-top: 10px;
-        }
+        .formula-trace { font-size: 11px; background: #fefce8; border: 1px dashed #eab308; padding: 8px; border-radius: 6px; margin-top: 5px; color: #854d0e; font-weight: 600; }
+        
+        .tax-tag { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 12px; text-align: center; margin-top: 10px; }
         .tax-tag-title { font-size: 12px; color: #991b1b; font-weight: bold; }
         .tax-tag-val { font-size: 20px; color: var(--accent); font-weight: 800; }
 
-        .net-tag {
-            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; text-align: center; margin-top: 10px;
-        }
+        .net-tag { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; text-align: center; margin-top: 10px; }
         .net-tag-title { font-size: 13px; color: #166534; font-weight: bold; }
         .net-tag-val { font-size: 22px; color: #15803d; font-weight: 800; }
 
@@ -191,7 +159,7 @@
 
 <div class="container">
     <header>
-        <div class="designer-info">Version: 2.0 (Cache Busting Active)</div>
+        <div class="designer-info">Version: 3.0 (GitHub Live Active)</div>
         <h1>成屋買賣稅務精密試算系統</h1>
         <p>獨立全新舊制切換介面、舊制核實與標準方案並列對比、自動個人綜所稅率級距精算</p>
     </header>
@@ -201,12 +169,12 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" id="btn-new" onclick="switchTab('new')">新制(房地合一2.0)</button>
-        <button class="tab-btn" id="btn-old" onclick="switchTab('old')">舊制(財產交易稅)</button>
+        <button class="tab-btn" id="btn-new">新制(房地合一2.0)</button>
+        <button class="tab-btn" id="btn-old">舊制(財產交易稅)</button>
     </div>
     <div class="tab-time-note" id="time-note-text">📌 當前適用範圍：2016 / 01 / 01 以後取得之不動產物業</div>
 
-    <div id="content-new" class="tab-content" style="display: block;">
+    <div id="content-new" class="tab-content">
         <div class="layout-grid">
             <div class="left-panel">
                 <div class="card">
@@ -214,30 +182,30 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>原取得時間</label>
-                            <input type="date" id="new-acquire-date" onchange="calcNewSystem()">
+                            <input type="date" id="new-acquire-date">
                         </div>
                         <div class="form-group">
                             <label>本次出售時間</label>
-                            <input type="date" id="new-sell-date" onchange="calcNewSystem()">
+                            <input type="date" id="new-sell-date">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>本次出售價格 (元)</label>
-                            <input type="text" id="new-sell-price" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
+                            <input type="text" id="new-sell-price" placeholder="請輸入金額">
                         </div>
                         <div class="form-group">
                             <label>原買進取得價 (元)</label>
-                            <input type="text" id="new-buy-price" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
+                            <input type="text" id="new-buy-price" placeholder="請輸入金額">
                         </div>
                     </div>
                     <div class="form-group">
                         <label>可扣除必要費用 / 裝潢改良費 (元)</label>
-                        <input type="text" id="new-expenses" placeholder="請輸入金額" oninput="formatInput(this); calcNewSystem();">
+                        <input type="text" id="new-expenses" placeholder="請輸入金額">
                     </div>
                     <div class="form-group">
                         <label>申請自住優惠 (設籍住滿6年)</label>
-                        <select id="new-self-use" onchange="calcNewSystem()">
+                        <select id="new-self-use">
                             <option value="no">不適用自住優惠</option>
                             <option value="yes">符合自住滿6年條件（享400萬免稅額 + 超額10%稅率）</option>
                         </select>
@@ -248,7 +216,7 @@
                     <h2>2. 重購退稅換屋規劃模擬</h2>
                     <div class="form-group">
                         <label>模擬未來重購（或已先買）的房屋總價 (元)</label>
-                        <input type="text" id="new-repurchase-price" placeholder="請輸入未來預計買入的新物業總價" oninput="formatInput(this); calcNewSystem();">
+                        <input type="text" id="new-repurchase-price" placeholder="請輸入未來預計買入的新物業總價">
                     </div>
                     <div class="repurchase-success-alert">
                         📌 <strong>重購退稅資格：</strong> 2年內「先賣後買」或「先買後賣」皆可申請。
@@ -267,7 +235,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label style="color:#7c3aed;">屋主期望稅後淨獲利 (元)</label>
-                            <input type="text" id="new-target-profit" placeholder="請輸入實拿利潤" oninput="formatInput(this); calcNewSystem();">
+                            <input type="text" id="new-target-profit" placeholder="請輸入實拿利潤">
                         </div>
                         <div class="form-group">
                             <label>逆向回推建議售價</label>
@@ -310,42 +278,42 @@
         </div>
     </div>
 
-    <div id="content-old" class="tab-content" style="display: none;">
+    <div id="content-old" class="tab-content">
         <div class="card">
             <h2>舊制基本交易資料與客戶所得輸入</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label>本次出售總價格 (元)</label>
-                    <input type="text" id="old-sell-price" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-sell-price" placeholder="請輸入金額">
                 </div>
                 <div class="form-group">
                     <label>原買進總價格 (元)</label>
-                    <input type="text" id="old-buy-price" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-buy-price" placeholder="請輸入金額">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>房屋評定現值 (元)</label>
-                    <input type="text" id="old-house-value" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-house-value" placeholder="請輸入金額">
                 </div>
                 <div class="form-group">
                     <label>土地公告現值總額 (元)</label>
-                    <input type="text" id="old-land-value" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-land-value" placeholder="請輸入金額">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>可扣除必要費用 / 裝潢改良費 (元)</label>
-                    <input type="text" id="old-expenses" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();">
+                    <input type="text" id="old-expenses" placeholder="請輸入金額">
                 </div>
                 <div class="form-group">
                     <label>各地區財產交易所得標準 (%)</label>
-                    <input type="text" id="old-standard-rate" value="45" oninput="calcOldSystem();">
+                    <input type="text" id="old-standard-rate" value="45">
                 </div>
             </div>
             <div class="form-group" style="background: #f1f5f9; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
                 <label style="color: var(--primary); font-size: 14px;">👤 客戶當年度其他預估個人所得總額 (元)</label>
-                <input type="text" id="old-user-income" placeholder="請輸入金額" oninput="formatInput(this); calcOldSystem();" style="background:#fff;">
+                <input type="text" id="old-user-income" placeholder="請輸入金額" style="background:#fff;">
             </div>
         </div>
 
@@ -400,7 +368,7 @@
         { max: Infinity,rate: 0.40, diff: 911700, label: "498萬以上 (差額911,700)" }
     ];
 
-    // V2 核心：100% 透過 JavaScript 的 style 屬性控制切換，徹底阻斷舊快取的干擾
+    // V3核心：徹底放棄HTML中的元素行內onclick綁定，改由JS直接強硬控管，擊碎快取！
     function switchTab(type) {
         const btnNew = document.getElementById('btn-new');
         const btnOld = document.getElementById('btn-old');
@@ -562,12 +530,39 @@
         document.getElementById('old-b-net-get').innerText = Math.round(sellPrice > 0 ? (sellPrice - expenses - addedTaxB) : 0).toLocaleString() + " 元";
     }
 
-    // 初始化強制渲染機制
-    window.onload = function() {
+    // 核心事件動態綁定機制：徹底擺脫舊瀏覽器對 onClick 的記憶卡死
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. 初始化頁面 UI
         initStageUI();
+        switchTab('new'); // 強制預售預設為新制
+
+        // 2. 動態綁定頁籤點擊事件
+        document.getElementById('btn-new').addEventListener('click', function() { switchTab('new'); });
+        document.getElementById('btn-old').addEventListener('click', function() { switchTab('old'); });
+
+        // 3. 新制動態監聽
+        document.getElementById('new-acquire-date').addEventListener('change', calcNewSystem);
+        document.getElementById('new-sell-date').addEventListener('change', calcNewSystem);
+        document.getElementById('new-sell-price').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-buy-price').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-expenses').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-self-use').addEventListener('change', calcNewSystem);
+        document.getElementById('new-repurchase-price').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-target-profit').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+
+        // 4. 舊制動態監聽
+        document.getElementById('old-sell-price').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-buy-price').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-house-value').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-land-value').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-expenses').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-standard-rate').addEventListener('input', calcOldSystem);
+        document.getElementById('old-user-income').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+
+        // 5. 初始執行一次試算
         calcNewSystem();
         calcOldSystem();
-    }
+    });
 </script>
 
 </body>
