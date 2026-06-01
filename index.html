@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>成屋買賣稅務試算系統(2026年版)</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #0d9488;
+            --accent: #dc2626;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #cbd5e1;
+            --text: #0f172a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 1280px; margin: 0 auto; }
+        
+        header {
+            background: linear-gradient(135deg, #facc15, #eab308);
+            color: #1e293b;
+            padding: 24px 20px 45px 20px; /* 增加底部留白，避免文字與右下角按鍵重疊 */
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            position: relative; /* 啟用相對定位，作為列印鍵的基準錨點 */
+            border: 1px solid #ca8a04;
+        }
+        .designer-info {
+            position: absolute;
+            top: 8px;
+            left: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            opacity: 0.8;
+            letter-spacing: 0.5px;
+        }
+        header h1 { margin: 0 0 6px 0; font-size: 26px; font-weight: 800; }
+        header p { margin: 0; font-size: 14px; font-weight: 600; opacity: 0.85; }
+        
+        /* 列印按鍵精準定位至黃框右下側 */
+        .btn-print {
+            position: absolute;
+            bottom: 12px;
+            right: 15px;
+            background: #1e293b;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .btn-print:hover { background: #0f172a; }
+
+        /* 導覽頁籤區域 */
+        .tabs { 
+            display: flex; 
+            width: 100%;
+            margin-bottom: 5px; 
+            border-bottom: 3px solid var(--primary); 
+        }
+        .tab-btn {
+            padding: 12px 28px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            background: #cbd5e1;
+            border: none; 
+            border-radius: 8px 8px 0 0; 
+            cursor: pointer; 
+            color: #1e293b;
+            box-sizing: border-box;
+            margin-right: 5px;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { background: #b45309; color: #fff; }
+        .tabs .tab-btn.active { background: var(--primary) !important; color: #ffffff !important; }
+
+        .tab-time-note { font-size: 13px; color: #64748b; font-weight: 600; margin-bottom: 20px; padding-left: 5px; }
+        .tab-content { display: none; }
+
+        /* 雙縱列網格排版 */
+        .layout-grid, .layout-old-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* 行動裝置響應式降級排版 */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            header { padding: 20px 15px 50px 15px; } /* 手機版同樣維持按鍵底部留白 */
+            header h1 { font-size: 20px; }
+            header p { font-size: 12px; }
+            .tabs { width: 100%; }
+            .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-size: 14px; margin-right: 2px; }
+            .tab-btn:last-child { margin-right: 0; }
+            .layout-grid, .layout-old-grid { grid-template-columns: 1fr; gap: 15px; }
+            .form-row { grid-template-columns: 1fr; gap: 12px; }
+            .btn-print { bottom: 10px; right: 12px; padding: 6px 12px; font-size: 12px; }
+        }
+
+        .card {
+            background: var(--card); border-radius: 12px; padding: 22px;
+            border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-top: 0; font-size: 18px; color: var(--primary);
+            border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #475569; font-size: 14px; }
+        
+        .gov-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            margin-left: 8px;
+            display: inline-block;
+        }
+        .gov-link:hover { text-decoration: underline; }
+
+        input[type="text"], input[type="date"], select {
+            width: 100%; padding: 12px 12px; border: 1px solid var(--border);
+            border-radius: 6px; box-sizing: border-box; font-size: 15px;
+            -webkit-appearance: none;
+            background-color: #fff;
+        }
+        input:focus, select:focus {
+            outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        }
+
+        .result-box {
+            background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 18px; margin-bottom: 15px;
+        }
+        
+        .result-item {
+            display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; font-size: 15px; gap: 8px; flex-wrap: wrap;
+        }
+        .result-item > span:first-child { flex: 1; min-width: 120px; }
+        .result-item > span:last-child { font-weight: 600; text-align: right; }
+
+        .countdown-alert { background-color: #fffbeb; border: 1px solid #fde68a; color: #b45309; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 10px; }
+        .repurchase-success-alert { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 14px; border-radius: 6px; font-size: 13px; margin-top: 10px; line-height: 1.6; font-weight: bold; }
+        .repurchase-warning-alert { background-color: #fff7ed; border: 1px solid #ffedd5; color: #c2410c; padding: 14px; border-radius: 6px; font-size: 13px; margin-top: 10px; line-height: 1.6; font-weight: 600; }
+
+        .stage-box { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; padding: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; }
+        .stage-item { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #475569; padding: 8px 12px; border-radius: 4px; gap: 6px; flex-wrap: wrap; }
+        .stage-item > span:first-child { flex: 1; min-width: 150px; font-weight: 500; }
+        .stage-item > .status { font-weight: bold; text-align: right; }
+        .stage-item.current { background: #fee2e2; color: var(--accent); font-weight: bold; border: 1px solid #fca5a5; }
+
+        .formula-trace { font-size: 12px; background: #fefce8; border: 1px dashed #eab308; padding: 10px; border-radius: 6px; margin-top: 8px; color: #854d0e; font-weight: 600; }
+        
+        .tax-tag { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }
+        .tax-tag-title { font-size: 13px; color: #991b1b; font-weight: bold; }
+        .tax-tag-val { font-size: 24px; color: var(--accent); font-weight: 800; }
+
+        .net-tag { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }
+        .net-tag-title { font-size: 14px; color: #166534; font-weight: bold; }
+        .net-tag-val { font-size: 26px; color: #15803d; font-weight: 800; }
+
+        .rate-badge { background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 12px; border: 1px solid #cbd5e1; color: #475569; }
+        .rate-badge.current { background: #fee2e2; color: var(--accent); border-color: #fca5a5; font-weight: bold; }
+
+        .system-alert { background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 14px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+        .disclaimer-card { background-color: #f1f5f9; border-left: 5px solid #64748b; padding: 15px; margin-top: 25px; border-radius: 0 8px 8px 0; }
+        .disclaimer-card p { margin: 0; font-size: 12px; color: #475569; text-align: justify; line-height: 1.6; }
+
+        .hidden { display: none !important; }
+        
+        @media print {
+            body { background: #fff; color: #000; padding: 0; }
+            .tabs, header button, .designer-info { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #000; page-break-inside: avoid; }
+            .tab-content { display: none !important; }
+            .tab-content.print-active { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="designer-info">Designer: CHEN YI-LING (AI Collaboration)</div>
+        <h1>成屋買賣稅務精密試算系統</h1>
+        <p>新舊制切換介面、舊制核實與標準方案並列對比、自動個人綜所稅率級距精算</p>
+        <button class="btn-print" onclick="printCurrentPage()">🖨️ 列印此頁報表</button>
+    </header>
+
+    <div id="global-old-alert" class="system-alert hidden">
+        💡 註記提示：檢測到您輸入的原取得時間早於 2016/01/01，本案件依法「適用舊制財產交易所得稅」計算，請點擊上方切換至舊制分頁進行精算。
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn" id="btn-new">新制(房地合一2.0)</button>
+        <button class="tab-btn" id="btn-old">舊制(財產交易所得稅)</button>
+    </div>
+    <div class="tab-time-note" id="time-note-text">📌 當前適用範圍：2016 / 01 / 01 以後取得之房屋</div>
+
+    <div id="content-new" class="tab-content">
+        <div class="layout-grid">
+            <div class="left-panel">
+                <div class="card">
+                    <h2>1. 輸入交易與時間資料</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>原取得時間</label>
+                            <input type="date" id="new-acquire-date">
+                        </div>
+                        <div class="form-group">
+                            <label>本次出售時間</label>
+                            <input type="date" id="new-sell-date">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>本次出售價格 (元)</label>
+                            <input type="text" id="new-sell-price" placeholder="請輸入金額">
+                        </div>
+                        <div class="form-group">
+                            <label>原買進總價格 (元) <span style="font-size:12px;color:#dc2626;"></label>
+                            <input type="text" id="new-buy-price" placeholder="請輸入金額">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>可扣除必要費用 / 固定裝潢費 (元)</label>
+                        <input type="text" id="new-expenses" placeholder="請輸入金額">
+                    </div>
+                    <div class="form-group">
+                        <label>申請自住優惠 (設籍滿6年)</label>
+                        <select id="new-self-use">
+                            <option value="no">不適用自住優惠</option>
+                            <option value="yes">符合自住滿6年條件（享400萬免稅額 + 超額10%稅率）</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card" style="border-top: 3px solid var(--secondary);">
+                    <h2>2. 重購退稅換屋規劃</h2>
+                    <p style="font-size:12px; color:#64748b; margin-top:-10px;">說明：提供屋主進行重購換屋（不論先買後賣或先賣後買）的所得稅退還估算。</p>
+                    <div class="form-group">
+                        <label>未來重購（或現已購買）的房屋總價 (元)</label>
+                        <input type="text" id="new-repurchase-price" placeholder="請輸入未來預計買入之房屋總價">
+                    </div>
+                    <div class="repurchase-success-alert">
+                        📌 <strong>重購退稅資格溫馨提醒：</strong><br>
+                        無論是「先賣後買」或「先買後賣」，只要舊屋出售與新屋買進的登記移轉時間<strong>「相差在 2 年以內」</strong>，且均符合自住設籍與未出租營業條件，即享有重購退稅/扣抵之規劃資格！
+                    </div>
+                    <div class="result-box" style="margin-top:15px;">
+                        <div class="result-item"><span>換屋規模判定：</span><span id="res-repurchase-type">無重購數據</span></div>
+                        <div class="result-item"><span>預估可退還稅額：</span><span style="color:var(--secondary); font-size:15px;" id="res-repurchase-tax">0 元</span></div>
+                    </div>
+                    <div id="repurchase-law-warning" class="repurchase-warning-alert hidden">
+                        ⚠️ <strong>5年列管期提醒：</strong> 新購屋之房地在 5 年內<strong>「必須維持自住使用（不可遷出戶籍）」</strong>，且<strong>「絕不可改作其他用途（如出租、營業）或再行移轉出售」</strong>，若有違規，國稅局或稅務局將會依法全額追繳原退還之各項稅款！
+                    </div>
+                </div>
+
+                <div class="card" style="border-top: 3px solid #8b5cf6;">
+                    <h2>3. 屋主期望稅後淨利回推計算機</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color:#7c3aed;">屋主期望稅後獲利 (元)</label>
+                            <input type="text" id="new-target-profit" placeholder="請輸入金額" oninput="formatInput(this);
+calcNewSystem();">
+                        </div>
+                        <div class="form-group">
+                            <label>回推建議售價(未往上抓浮額)</label>
+                            <div id="new-back-price" style="font-size: 19px; font-weight: bold; color: #7c3aed; padding-top: 8px;">0 元</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card">
+                    <h2>試算結果與稅率級距</h2>
+                    <div class="result-box">
+                        <div class="result-item"><span>計算實際持有期間：</span><span id="res-new-days">0.00 年</span></div>
+                        <div class="result-item"><span>本筆交易稅前獲利：</span><span id="res-new-rawgain">0 元</span></div>
+                    </div>
+
+                    <label>新制房地合一稅率級距：</label>
+                    <div style="display:flex; flex-direction:column; gap:6px; margin: 10px 0 15px 0;">
+                        <div class="result-item"><span>持有 2 年內 (稅率 45%)</span> <span class="rate-badge" id="badge-45">未符合</span></div>
+                        <div class="result-item"><span>持有 2~5 年 (稅率 35%)</span> <span class="rate-badge" id="badge-35">未符合</span></div>
+                        <div class="result-item"><span>持有 5~10 年 (稅率 20%)</span> <span class="rate-badge" id="badge-20">未符合</span></div>
+                        <div class="result-item"><span>持有 10 年以上 (稅率 15%)</span> <span class="rate-badge" id="badge-15">未符合</span></div>
+                        <div class="result-item"><span>自住滿 6 年優惠 (稅率 10%)</span> <span class="rate-badge" id="badge-self">未符合</span></div>
+                    </div>
+
+                    <div id="countdown-wrapper"></div>
+
+                    <div class="result-box" style="margin-top:15px;">
+                        <div class="result-item"><span>自住免稅額扣除：</span><span id="res-new-deduct">0 元</span></div>
+                        <div class="result-item"><span>應課稅額：</span><span id="res-new-taxable">0 元</span></div>
+                    </div>
+
+                    <div class="tax-tag">
+                        <div class="tax-tag-title">🎯 本件房屋預估應繳房地合一稅額</div>
+                        <div class="tax-tag-val" id="res-tax-new">0 元</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="content-old" class="tab-content">
+        <div class="card">
+            <h2>舊制基本交易資料</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>本次出售價格 (元)</label>
+                    <input type="text" id="old-sell-price" placeholder="請輸入金額">
+                </div>
+                <div class="form-group">
+                    <label>原買進總價格 (元) <span style="font-size:11px;color:#dc2626;">(核實申報必填)</span></label>
+                    <input type="text" id="old-buy-price" placeholder="請輸入金額">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>房屋評定現值 (元)</label>
+                    <input type="text" id="old-house-value" placeholder="請輸入金額">
+                </div>
+                <div class="form-group">
+                    <label>土地公告現值 (元)</label>
+                    <input type="text" id="old-land-value" placeholder="請輸入金額">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>可扣除必要費用 / 固定裝潢費 (元)</label>
+                    <input type="text" id="old-expenses" placeholder="請輸入金額">
+                </div>
+                <div class="form-group">
+                    <label style="display: inline-block;">各地區財產交易所得標準 (%)</label>
+                    <a href="https://www.etax.nat.gov.tw/etwmain/tax-info/understanding/tax-q-and-a/national/individual-income-tax/taxation-scope/which-income/r8q3EDv" target="_blank" class="gov-link">🔗 國稅局官方標準查詢</a>
+                    <input type="text" id="old-standard-rate" value="45">
+                </div>
+            </div>
+            <div class="form-group" style="background: #f1f5f9; padding: 14px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                <label style="color: var(--primary); font-size: 15px;">👤 客戶當年度預估個人所得總額 (元) <span style="font-size:12px;color:#475569;">(如薪資、股利等)</span></label>
+                <input type="text" id="old-user-income" placeholder="請輸入金額" style="background:#fff;">
+            </div>
+        </div>
+
+        <div class="layout-old-grid">
+            <div class="card" style="border-top: 4px solid var(--secondary);">
+                <h2>⚖️ 方案 A：核實申報方案</h2>
+                <p style="font-size:13px; color:#64748b; margin-top:-10px;">說明：依房地現值比例拆算出「純房屋」的交易獲利金額納入綜所稅。</p>
+
+                <div class="result-box">
+                    <div class="result-item"><span>整體買賣稅前獲利：</span><span id="old-a-rawgain">0 元</span></div>
+                    <div class="result-item"><span>房屋價值拆算比重：</span><span id="old-a-ratio">0.00%</span></div>
+                    <div class="result-item"><span>歸屬房屋財產交易所得：</span><span style="color:var(--secondary);" id="old-a-housegain">0 元</span></div>
+                </div>
+                <label>綜合所得稅五大級距動態追蹤：</label>
+                <div class="stage-box" id="old-a-stage-wrapper"></div>
+                <div class="result-box">
+                    <div class="result-item"><span>合併計稅總所得額：</span><span id="old-a-total-income">0 元</span></div>
+                </div>
+                <div class="formula-trace" id="old-a-formula-text">計算過程：等待資料輸入...</div>
+                <div class="tax-tag"><div class="tax-tag-title">🎯 本筆房屋預估增繳綜合所得稅</div><div class="tax-tag-val" id="old-a-tax-cost">0 元</div></div>
+                <div class="net-tag"><div class="net-tag-title">💰 扣除該筆稅費後，屋主稅後獲利</div><div class="net-tag-val" id="old-a-net-get">0 元</div></div>
+            </div>
+
+            <div class="card" style="border-top: 4px solid #f59e0b;">
+                <h2>⚖️ 方案 B：標準核定方案</h2><p style="font-size:13px; color:#64748b; margin-top:-10px;">說明：預設無原始買進憑證，由國稅局以（房屋現值 × 所得標準％）推計所得。</p>
+                <div class="result-box">
+                    <div class="result-item"><span>是否觸及高價豪宅門檻：</span><span id="old-b-luxury">否</span></div>
+                    <div class="result-item"><span>房屋評定現值基礎：</span><span id="old-b-houseval">0 元</span></div>
+                    <div class="result-item"><span>歸屬房屋財產交易所得：</span><span style="color:#d97706;" id="old-b-housegain">0 元</span></div>
+                </div>
+                <label>綜合所得稅五大級距動態追蹤：</label>
+                <div class="stage-box" id="old-b-stage-wrapper"></div>
+                <div class="result-box">
+                    <div class="result-item"><span>合併計稅總所得額：</span><span id="old-b-total-income">0 元</span></div>
+                </div>
+                <div class="formula-trace" id="old-b-formula-text">計算過程：等待資料輸入...</div>
+                <div class="tax-tag" style="background:#fffbeb; border-color:#fef08a;"><div class="tax-tag-title" style="color:#854d0e;">🎯 本筆房屋預估增繳綜合所得稅</div><div class="tax-tag-val" id="old-b-tax-cost" style="color:#ca8a04;">0 元</div></div>
+                <div class="net-tag"><div class="net-tag-title">💰 扣除該筆稅費後，屋主稅後獲利</div><div class="net-tag-val" id="old-b-net-get">0 元</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="disclaimer-card">
+        <p>
+            <strong>⚠️ 【法律免責聲明】</strong><br>
+            本試算系統所提供之各項模擬試算結果、稅率級距及應納稅額估算，僅供內部同仁及客戶作為物業買賣決策與前期節稅規劃之參考用途。
+            各項稅務法規（如房地合一稅 2.0、個人綜合所得稅、各地區推計財產交易所得標準）可能隨法規修正或年度物價指數而有所調整。
+            實際應納稅額及實拿獲利金額，仍應以產權辦理或明年度正式申報時，主管稽徵機關（國稅局）依據實際交易憑證、完稅證明及最終審查核定之結果為準。
+        </p>
+    </div>
+</div>
+
+<script>
+    const TAX_CONFIG = [
+        { max: 590000,  rate: 0.05, diff: 0,      label: "所得 59 萬以下 (稅率 5% / 差額 0)" },
+        { max: 1330000, rate: 0.12, diff: 41300,  label: "所得 59萬 ~ 133萬 (稅率 12% / 差額 41,300)" },
+        { max: 2660000, rate: 0.20, diff: 147700, label: "所得 133萬 ~ 266萬 (稅率 20% / 差額 147,700)" },
+        { max: 4980000, rate: 0.30, diff: 413700, label: "所得 266萬 ~ 498萬 (稅率 30% / 差額 413,700)" },
+        { max: Infinity,rate: 0.40, diff: 911700, label: "所得 498 萬以上 (稅率 40% / 差額 911,700)" }
+    ];
+
+    function initStageUI() {
+        ['old-a', 'old-b'].forEach(prefix => {
+            let container = document.getElementById(`${prefix}-stage-wrapper`);
+            if(!container) return;
+            container.innerHTML = '';
+            TAX_CONFIG.forEach((cfg, idx) => {
+                container.innerHTML += `
+                    <div class="stage-item" id="${prefix}-stage-${idx}">
+                        <span>${cfg.label}</span>
+                        <span class="status">-</span>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    function switchTab(type) {
+        const btnNew = document.getElementById('btn-new');
+        const btnOld = document.getElementById('btn-old');
+        const contentNew = document.getElementById('content-new');
+        const contentOld = document.getElementById('content-old');
+        const noteText = document.getElementById('time-note-text');
+
+        if (type === 'new') {
+            btnNew.className = 'tab-btn active';
+            btnOld.className = 'tab-btn';
+            contentNew.style.display = 'block';
+            contentOld.style.display = 'none';
+            noteText.innerText = "📌 當前適用範圍：2016 / 01 / 01 以後取得之房屋";
+        } else {
+            btnNew.className = 'tab-btn';
+            btnOld.className = 'tab-btn active';
+            contentNew.style.display = 'none';
+            contentOld.style.display = 'block';
+            noteText.innerText = "📌 當前適用範圍：2015 / 12 / 31 以前取得之房屋";
+        }
+    }
+
+    function formatInput(el) {
+        let val = el.value.replace(/,/g, '');
+        if(!isNaN(val) && val !== '') {
+            el.value = parseFloat(val).toLocaleString('zh-TW');
+        } else {
+            el.value = val.replace(/[^\d]/g, '');
+        }
+    }
+
+    function getNum(id) {
+        let val = document.getElementById(id).value.replace(/,/g, '');
+        return parseFloat(val) || 0;
+    }
+
+    function getTaxDetails(netIncome) {
+        if (netIncome <= 0) {
+            return { tax: 0, rate: TAX_CONFIG[0].rate*100, diff: TAX_CONFIG[0].diff, idx: 0, text: '0 × 5% = 0' };
+        }
+        let targetIdx = TAX_CONFIG.length - 1; 
+        for (let i = 0; i < TAX_CONFIG.length; i++) {
+            if (netIncome <= TAX_CONFIG[i].max) { targetIdx = i; break; }
+        }
+        let cfg = TAX_CONFIG[targetIdx];
+        let taxPayable = (netIncome * cfg.rate) - cfg.diff;
+        return { tax: Math.max(0, taxPayable), rate: cfg.rate * 100, diff: cfg.diff, idx: targetIdx, text: `(${netIncome.toLocaleString()} × ${(cfg.rate*100)}%) - ${cfg.diff.toLocaleString()}` };
+    }
+
+    function updateStageUI(prefix, currentIdx) {
+        TAX_CONFIG.forEach((cfg, idx) => {
+            let row = document.getElementById(`${prefix}-stage-${idx}`);
+            if(!row) return;
+            let statusSpan = row.querySelector('.status');
+            if (idx === currentIdx) { 
+                row.className = "stage-item current"; 
+                statusSpan.innerText = `當前符合`; 
+            } else { 
+                row.className = "stage-item"; 
+                statusSpan.innerText = `-`; 
+            }
+        });
+    }
+
+    function calcNewSystem() {
+        const acqDateStr = document.getElementById('new-acquire-date').value;
+        const sellDateStr = document.getElementById('new-sell-date').value;
+        const isSelfUse = document.getElementById('new-self-use').value === 'yes';
+        let holdingYears = 0;
+        
+        if(acqDateStr) {
+            const alertBox = document.getElementById('global-old-alert');
+            if(new Date(acqDateStr) < new Date('2016-01-01')) alertBox.classList.remove('hidden');
+            else alertBox.classList.add('hidden');
+        }
+
+        if(acqDateStr && sellDateStr) {
+            holdingYears = (new Date(sellDateStr) - new Date(acqDateStr)) / (1000 * 60 * 60 * 24 * 365.25);
+            if (holdingYears < 0) holdingYears = 0;
+        }
+        document.getElementById('res-new-days').innerText = holdingYears.toFixed(2) + " 年";
+
+        const sellPrice = getNum('new-sell-price');
+        const buyPrice = getNum('new-buy-price');
+        const expenses = getNum('new-expenses');
+        const rawGain = (sellPrice > 0) ? (sellPrice - buyPrice - expenses) : 0;
+        document.getElementById('res-new-rawgain').innerText = (rawGain > 0 ? rawGain : 0).toLocaleString() + " 元";
+
+        let taxRate = 0, deduction = 0;
+        
+        ['badge-45', 'badge-35', 'badge-20', 'badge-15', 'badge-self'].forEach(id => {
+            let badge = document.getElementById(id);
+            if(badge) {
+                badge.className = 'rate-badge';
+                badge.innerText = '未符合';
+            }
+        });
+
+        if (isSelfUse && holdingYears >= 6) { 
+            taxRate = 0.10; 
+            deduction = 4000000; 
+            let badge = document.getElementById('badge-self');
+            if(badge) { badge.className = 'rate-badge current'; badge.innerText = '當前適用'; }
+        } else {
+            if (holdingYears < 2) { 
+                taxRate = 0.45; 
+                let badge = document.getElementById('badge-45');
+                if(badge) { badge.className = 'rate-badge current'; badge.innerText = '當前適用'; }
+            } else if (holdingYears >= 2 && holdingYears < 5) { 
+                taxRate = 0.35; 
+                let badge = document.getElementById('badge-35');
+                if(badge) { badge.className = 'rate-badge current'; badge.innerText = '當前適用'; }
+            } else if (holdingYears >= 5 && holdingYears < 10) { 
+                taxRate = 0.20; 
+                let badge = document.getElementById('badge-20');
+                if(badge) { badge.className = 'rate-badge current'; badge.innerText = '當前適用'; }
+            } else { 
+                taxRate = 0.15; 
+                let badge = document.getElementById('badge-15');
+                if(badge) { badge.className = 'rate-badge current'; badge.innerText = '當前適用'; }
+            }
+        }
+
+        let taxableGain = rawGain - deduction;
+        if (taxableGain < 0 || rawGain <= 0) taxableGain = 0;
+        document.getElementById('res-new-deduct').innerText = deduction.toLocaleString() + " 元";
+        document.getElementById('res-new-taxable').innerText = taxableGain.toLocaleString() + " 元";
+        
+        const netTax = Math.round(taxableGain * taxRate);
+        document.getElementById('res-tax-new').innerText = netTax.toLocaleString() + " 元";
+
+        const repurchasePrice = getNum('new-repurchase-price');
+        const warnBox = document.getElementById('repurchase-law-warning');
+        if (repurchasePrice > 0 && sellPrice > 0) {
+            if (repurchasePrice >= sellPrice) {
+                document.getElementById('res-repurchase-type').innerText = "大換小 / 全額退稅";
+                document.getElementById('res-repurchase-tax').innerText = netTax.toLocaleString() + " 元";
+            } else {
+                document.getElementById('res-repurchase-type').innerText = "小換大 / 比例退稅";
+                let ratioRefund = (repurchasePrice / sellPrice) * netTax;
+                document.getElementById('res-repurchase-tax').innerText = Math.round(ratioRefund).toLocaleString() + " 元";
+            }
+            warnBox.classList.remove('hidden');
+        } else {
+            document.getElementById('res-repurchase-type').innerText = "無重購數據";
+            document.getElementById('res-repurchase-tax').innerText = "0 元";
+            warnBox.classList.add('hidden');
+        }
+
+        const targetProfit = getNum('new-target-profit');
+        if (targetProfit > 0 && buyPrice > 0) {
+            let recommendedSell = 0;
+            if (isSelfUse && holdingYears >= 6) {
+                if (targetProfit <= 4000000) { recommendedSell = targetProfit + buyPrice + expenses; } 
+                else { recommendedSell = (targetProfit - 400000) / 0.9 + buyPrice + expenses; }
+            } else {
+                recommendedSell = (targetProfit) / (1 - taxRate) + buyPrice + expenses;
+            }
+            document.getElementById('new-back-price').innerText = Math.round(recommendedSell).toLocaleString() + " 元";
+        } else {
+            document.getElementById('new-back-price').innerText = "0 元";
+        }
+    }
+
+    function calcOldSystem() {
+        const sellPrice = getNum('old-sell-price');
+        const buyPrice = getNum('old-buy-price');
+        const houseValue = getNum('old-house-value');
+        const landValue = getNum('old-land-value');
+        const expenses = getNum('old-expenses');
+        const standardRate = (parseFloat(document.getElementById('old-standard-rate').value) || 0) / 100;
+        const userIncome = getNum('old-user-income');
+
+        const totalValue = houseValue + landValue;
+        let houseRatio = totalValue > 0 ? (houseValue / totalValue) : 0;
+        const baseTaxObj = getTaxDetails(userIncome);
+
+        const rawGainA = sellPrice - buyPrice - expenses;
+        let houseGainA = rawGainA > 0 ? (rawGainA * houseRatio) : 0;
+        let totalIncomeA = userIncome + houseGainA;
+        let taxObjA = getTaxDetails(totalIncomeA);
+        updateStageUI('old-a', taxObjA.idx);
+        let addedTaxA = Math.max(0, taxObjA.tax - baseTaxObj.tax);
+
+        document.getElementById('old-a-rawgain').innerText = (rawGainA > 0 ? rawGainA : 0).toLocaleString() + " 元";
+        document.getElementById('old-a-ratio').innerText = (houseRatio * 100).toFixed(2) + "%";
+        document.getElementById('old-a-housegain').innerText = Math.round(houseGainA).toLocaleString() + " 元";
+        document.getElementById('old-a-total-income').innerText = Math.round(totalIncomeA).toLocaleString() + " 元";
+        document.getElementById('old-a-tax-cost').innerText = Math.round(addedTaxA).toLocaleString() + " 元";
+        document.getElementById('old-a-net-get').innerText = Math.round(sellPrice > 0 ? (sellPrice - buyPrice - expenses - addedTaxA) : 0).toLocaleString() + " 元";
+        document.getElementById('old-a-formula-text').innerHTML =
+`💡 解釋公式：<br>
+1. 合併總所得應繳稅額：${Math.round(totalIncomeA).toLocaleString()} × ${taxObjA.rate}% = ${Math.round(taxObjA.tax).toLocaleString()}<br>
+2. 客戶原所得單獨應繳：${userIncome.toLocaleString()} × ${baseTaxObj.rate}% = ${Math.round(baseTaxObj.tax).toLocaleString()}<br>
+3. 本案增繳綜所稅 = 兩者差額 = ${Math.round(addedTaxA).toLocaleString()} 元`;
+
+        let isLuxury = sellPrice >= 60000000;
+        document.getElementById('old-b-luxury').innerText = isLuxury ? "⚠️ 豪宅門檻" : "否";
+        let houseGainB = isLuxury ? (sellPrice * houseRatio * 0.17) : (houseValue * standardRate);
+        let taxObjB = getTaxDetails(userIncome + houseGainB);
+        updateStageUI('old-b', taxObjB.idx);
+        let addedTaxB = Math.max(0, taxObjB.tax - baseTaxObj.tax);
+
+        document.getElementById('old-b-houseval').innerText = houseValue.toLocaleString() + " 元";
+        document.getElementById('old-b-housegain').innerText = Math.round(houseGainB).toLocaleString() + " 元";
+        document.getElementById('old-b-total-income').innerText = Math.round(userIncome + houseGainB).toLocaleString() + " 元";
+        document.getElementById('old-b-tax-cost').innerText = Math.round(addedTaxB).toLocaleString() + " 元";
+        document.getElementById('old-b-net-get').innerText = Math.round(sellPrice > 0 ? (sellPrice - expenses - addedTaxB) : 0).toLocaleString() + " 元";
+        document.getElementById('old-b-formula-text').innerHTML =
+`💡 解釋公式：<br>
+1. 合併總所得應繳稅額：${Math.round(userIncome + houseGainB).toLocaleString()} × ${taxObjB.rate}% = ${Math.round(taxObjB.tax).toLocaleString()}<br>
+2. 客戶原所得單獨應繳：${userIncome.toLocaleString()} × ${baseTaxObj.rate}% = ${Math.round(baseTaxObj.tax).toLocaleString()}<br>
+3. 本案增繳綜所稅 = 兩者差額 = ${Math.round(addedTaxB).toLocaleString()} 元`;
+    }
+
+    
+    function printCurrentPage() {
+        document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('print-active'));
+        const activeTab=document.getElementById('content-new').style.display==='block' ? document.getElementById('content-new') : document.getElementById('content-old');
+        activeTab.classList.add('print-active');
+        window.print();
+        activeTab.classList.remove('print-active');
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        initStageUI();
+        switchTab('new');
+
+        document.getElementById('btn-new').addEventListener('click', function() { switchTab('new'); });
+        document.getElementById('btn-old').addEventListener('click', function() { switchTab('old'); });
+
+        document.getElementById('new-acquire-date').addEventListener('change', calcNewSystem);
+        document.getElementById('new-sell-date').addEventListener('change', calcNewSystem);
+        document.getElementById('new-sell-price').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-buy-price').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-expenses').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-self-use').addEventListener('change', calcNewSystem);
+        document.getElementById('new-repurchase-price').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+        document.getElementById('new-target-profit').addEventListener('input', function() { formatInput(this); calcNewSystem(); });
+
+        document.getElementById('old-sell-price').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-buy-price').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-house-value').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-land-value').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-expenses').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+        document.getElementById('old-standard-rate').addEventListener('input', calcOldSystem);
+        document.getElementById('old-user-income').addEventListener('input', function() { formatInput(this); calcOldSystem(); });
+
+        calcNewSystem();
+        calcOldSystem();
+    });
+</script>
+
+</body>
+</html>
