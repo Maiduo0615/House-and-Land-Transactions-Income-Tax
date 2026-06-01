@@ -201,8 +201,8 @@
     <header>
         <div class="designer-info">Designer: CHEN YI-LING (AI Collaboration)</div>
         <h1>成屋買賣稅務精密試算系統</h1>
-        <p>新舊制切換介面、舊制核實與標準方案並列對比、自動個人綜所稅率級距精算</p>
-        <p>版本：2026.06.01.v2 | 若需強制更新請按 Ctrl+F5</p>
+        <p>新制房地合一稅計算、舊制核實與標準方案對比、個人綜所稅率級距動態精算</p>
+        <p>版本：2026.06.01.v3 | 若需強制更新請按 Ctrl+F5</p>
         <button class="btn-print" onclick="printCurrentPage()">🖨️ 列印此頁報表</button>
     </header>
 
@@ -692,7 +692,7 @@ calcNewSystem();">
 </script>
 
 <script>
-    const CURRENT_VERSION = "v2"; 
+    const CURRENT_VERSION = "v3"; 
     const savedVersion = localStorage.getItem("app_version");
     if (savedVersion !== CURRENT_VERSION) {
         localStorage.setItem("app_version", CURRENT_VERSION);
